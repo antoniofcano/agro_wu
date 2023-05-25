@@ -22,10 +22,10 @@ import math
 
 class AgroCalculations:
     def __init__(self, latitude, elevation, growth_stage):
-        self.latitude = latitude
-        self.elevation = elevation
+        self.latitude = float(latitude)
+        self.elevation = float(elevation)
         self.growth_stage = growth_stage
-        self.irrigation_efficiency = 0.75
+        self.irrigation_efficiency = 0.9
 
     # The solar_declination function calculates the solar declination in degrees for a specific day of the year.
     # The solar declination is the angle between the plane of the Earth's equator and the direction of the Sun. This
@@ -90,16 +90,16 @@ class AgroCalculations:
     # water resources management to estimate crop water demand and assess water availability.
     def penman_monteith_modified(self, tmax, tmin, tmed, rh_max, rh_min, day_of_year):
         # Cálculo de la presión del aire
-        P = 101.3 * (((293 - 0.0065 * self.elevation) / 293) ** 5.26)
+        P = 101.3 * (((293 - 0.0065 * self.elevation) / 293) * 5.26)
 
         # Cálculo de la radiación neta
-        Rn = (0.75 + 2e-5 * self.elevation) * self.extraterrestrial_radiation(day_of_year)
+        Rn = (0.75 + 2e-5 * self.elevation) * self._extraterrestrial_radiation(day_of_year)
 
         # Cálculo de la temperatura promedio en Kelvin
         Tmean_K = tmed + 273.15
 
         # Cálculo de la radiación de onda larga
-        Rl = -0.00000005 * Tmean_K ** 4 * (0.34 - 0.14 * math.sqrt((rh_max + rh_min) / 2)) * (1.35 * Rn / self.extraterrestrial_radiation(day_of_year) - 0.35)
+        Rl = -0.00000005 * Tmean_K ** 4 * (0.34 - 0.14 * math.sqrt((rh_max + rh_min) / 2)) * (1.35 * Rn / self._extraterrestrial_radiation(day_of_year) - 0.35)
 
         # Cálculo de la radiación neta ajustada
         Rn_adj = Rn + Rl
@@ -125,6 +125,8 @@ class AgroCalculations:
         effective_precipitation = precipitation * 10  # Convert from cm to mm
         water_required = (etc_values - effective_precipitation) / self.irrigation_efficiency
         water_required_liters = water_required * 1000  # Convert from m^3 to liters (assuming 1 ha area)
-        water_required_liters = water_required_liters.clip(lower=0)  # Set a lower limit of 0
+        if ( water_required_liters < 0 ):
+            water_required_liters = 0
+        #water_required_liters = water_required_liters.clip(lower=0)  # Set a lower limit of 0
         return water_required_liters
 
